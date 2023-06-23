@@ -78,31 +78,27 @@ df['long'] = norm.fit_transform(np.array(df['long']).reshape(-1,1))
 
 #function to split dataset int training and test
 
-X = df.iloc[:,n]
-y = df.iloc[:,-1:].values.T
+
 def trainingData(df,n):
     X = df.iloc[:,n]
     y = df.iloc[:,-1:].values.T
     y=y[0]
     X_train,X_test,y_train,y_test=train_test_split(X,y,train_size=0.9,test_size=0.1,random_state=0)
+    folder_path = 'data'
+
+
+    train_data_path = os.path.join(folder_path, "train.csv")
+    X.to_csv(train_data_path, index=False)
+
+    print("Train data saved to", train_data_path)
+    folder_path = 'data'
+    test_data_path = os.path.join(folder_path, "test.csv")
+    y = pd.DataFrame(y)
+    y.to_csv(test_data_path, index=False)
+
+    print("Test data saved to", test_data_path)
+
     return (X_train,X_test,y_train,y_test)
-
-
-folder_path = 'data'
-
-
-train_data_path = os.path.join(folder_path, "train.csv")
-X.to_csv(train_data_path, index=False)
-
-print("Train data saved to", train_data_path)
-
-folder_path = 'data'
-
-
-test_data_path = os.path.join(folder_path, "test.csv")
-y.to_csv(test_data_path, index=False)
-
-print("Test data saved to", test_data_path)
 
 X_train,X_test,y_train,y_test=trainingData(df,list(range(len(list(df.columns))-1)))
 
@@ -192,8 +188,10 @@ y_pred = RFR.predict(X_test)
 xg_reg = xgb.XGBRegressor(objective ='reg:squarederror', learning_rate = 0.4,
                 max_depth = 24, alpha = 5, n_estimators = 200)
 xg_reg.fit(X_train,y_train)
+params = xg_reg.get_params()
 y_pred = xg_reg.predict(X_test)
 
+#··························· Do I have to do the de-escalate again? 
 # y_test_1,y_pred_1=remove_neg(y_test,y_pred)
 # r8_xg=result(y_test_1,y_pred_1)
 # print("MSLE : {}".format(r8_xg[0]))
@@ -210,6 +208,12 @@ y_pred = xg_reg.predict(X_test)
 # accu['XGBoost Regressor']=r8_xg
 
 models_folder = 'models'
-model_path = os.path.join(models_folder, "model.pkl")
+model_path = os.path.join(models_folder, "train_model.pkl")
 with open(model_path, 'wb') as file:
     pickle.dump(xg_reg, file)
+
+ruta_parametros = os.path.join(models_folder, 'model_config.yaml')
+
+# Guarda los parámetros en el archivo pickle
+with open(ruta_parametros, 'wb') as archivo:
+    pickle.dump(params, archivo)
